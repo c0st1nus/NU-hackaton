@@ -6,6 +6,7 @@ import { ArrowLeft, MapPin, User, Brain, UserCheck, Calendar } from 'lucide-reac
 import { api } from '@/lib/api'
 import type { TicketDetail } from '@/types'
 import { SegmentBadge, SentimentBadge, PriorityBadge, LangBadge } from '../../components/badges'
+import Map from '../../components/map'
 
 function calcAge(birthDate: string | null): string {
   if (!birthDate) return '—'
@@ -105,11 +106,16 @@ export default function TicketDetailPage() {
                 {[t.street, t.house].filter(Boolean).join(', ') || '—'}
               </Row>
               {(t.latitude != null && t.longitude != null) && (
-                <Row label="Координаты">
-                  <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-muted)' }}>
-                    {t.latitude.toFixed(4)}, {t.longitude.toFixed(4)}
-                  </span>
-                </Row>
+                <>
+                  <Row label="Координаты">
+                    <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-muted)' }}>
+                      {t.latitude.toFixed(4)}, {t.longitude.toFixed(4)}
+                    </span>
+                  </Row>
+                  <div style={{ marginTop: 12 }}>
+                    <Map center={[t.latitude, t.longitude]} />
+                  </div>
+                </>
               )}
               <Row label="Источник">
                 <span className="badge badge-new">{t.source ?? '—'}</span>
