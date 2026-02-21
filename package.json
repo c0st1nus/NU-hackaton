@@ -1,0 +1,14 @@
+{
+  "name": "nu-hackaton",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "web"
+  ],
+  "scripts": {
+    "dev": "bun --filter '*' dev",
+    "dev:backend": "bun --filter backend dev",
+    "dev:web": "bun --filter web dev",
+    "build": "bun --filter '*' build"
+  }
+}
