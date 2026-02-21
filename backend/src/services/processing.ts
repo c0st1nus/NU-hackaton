@@ -10,10 +10,13 @@
  * The `assignTicket` export below is re-exported so teammate can import it conveniently.
  */
 
-export { assignTicket } from '../services/assignment'
+export { assignTicket } from "../services/assignment";
 
-export async function processAllTickets(): Promise<{ count: number; errors: string[] }> {
+export async function processAllTickets(): Promise<{
+  count: number;
+  errors: string[];
+}> {
   // TODO: teammate implements this
-  console.warn('processAllTickets() stub — teammate implementation pending')
-  return { count: 0, errors: ['Processing service not yet implemented'] }
+  console.warn("processAllTickets() stub — teammate implementation pending");
+  return { count: 0, errors: ["Processing service not yet implemented"] };
 }

@@ -1,12 +1,12 @@
-import { Elysia } from 'elysia'
-import { db } from '../db'
-import { assignments, tickets, ticketAnalysis, managers } from '../db/schema'
-import { eq } from 'drizzle-orm'
+import { eq } from "drizzle-orm";
+import { Elysia } from "elysia";
+import { db } from "../db";
+import { assignments, managers, ticketAnalysis, tickets } from "../db/schema";
 
-export const assignmentsRoutes = new Elysia({ prefix: '/assignments' })
+export const assignmentsRoutes = new Elysia({ prefix: "/assignments" })
 
   // GET /assignments — all assignments with ticket + manager info
-  .get('/', async () => {
+  .get("/", async () => {
     const rows = await db
       .select({
         id: assignments.id,
@@ -28,7 +28,7 @@ export const assignmentsRoutes = new Elysia({ prefix: '/assignments' })
       .leftJoin(tickets, eq(tickets.id, assignments.ticketId))
       .leftJoin(ticketAnalysis, eq(ticketAnalysis.ticketId, tickets.id))
       .leftJoin(managers, eq(managers.id, assignments.managerId))
-      .orderBy(assignments.assignedAt)
+      .orderBy(assignments.assignedAt);
 
-    return rows
-  })
+    return rows;
+  });

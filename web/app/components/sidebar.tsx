@@ -1,28 +1,43 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, Inbox, FileText, Users,
-  BarChart3, Sparkles, X, GitBranch,
-} from 'lucide-react'
+  BarChart3,
+  GitBranch,
+  Inbox,
+  LayoutDashboard,
+  Sparkles,
+  Users,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { type Dictionary, useI18n } from "../../dictionaries/i18n";
 
-const NAV = [
-  { href: '/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/tickets',    icon: Inbox,           label: 'Incoming Queue', badge: null },
-  { href: '/ticket',     icon: FileText,        label: 'Ticket Review' },
-  { href: '/managers',   icon: Users,           label: 'Managers' },
-  { href: '/stats',      icon: BarChart3,       label: 'Analytics' },
-  { href: '/star-task',  icon: Sparkles,        label: 'Star Task ⭐' },
-]
+const getNavKeys = (t: Dictionary) => [
+  { href: "/dashboard", icon: LayoutDashboard, label: t.sidebar.dashboard },
+  {
+    href: "/tickets",
+    icon: Inbox,
+    label: t.sidebar.incomingQueue,
+    badge: null,
+  },
+  { href: "/managers", icon: Users, label: t.sidebar.managers },
+  { href: "/stats", icon: BarChart3, label: t.sidebar.analytics },
+  { href: "/star-task", icon: Sparkles, label: t.sidebar.starTask },
+];
 
-interface SidebarProps { open: boolean; onClose: () => void }
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
 
 export function Sidebar({ open, onClose }: SidebarProps) {
-  const path = usePathname()
+  const path = usePathname();
+  const { t } = useI18n();
+  const NAV = getNavKeys(t);
 
   return (
-    <aside className={`sidebar ${open ? 'open' : ''}`}>
+    <aside className={`sidebar ${open ? "open" : ""}`}>
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon">
           <GitBranch size={16} />
@@ -35,9 +50,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <button
           onClick={onClose}
           style={{
-            marginLeft: 'auto', background: 'none', border: 'none',
-            color: '#9CA3AF', cursor: 'pointer', padding: 4,
-            display: 'flex', alignItems: 'center',
+            marginLeft: "auto",
+            background: "none",
+            border: "none",
+            color: "#9CA3AF",
+            cursor: "pointer",
+            padding: 4,
+            display: "flex",
+            alignItems: "center",
           }}
           className="lg-hidden"
           aria-label="Close sidebar"
@@ -51,15 +71,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <Link
             key={href}
             href={href}
-            className={`nav-item ${path.startsWith(href) ? 'active' : ''}`}
+            className={`nav-item ${path.startsWith(href) ? "active" : ""}`}
             onClick={onClose}
           >
             <Icon size={17} />
-            <span>{label}</span>
-            {badge && <span className="nav-badge">{badge}</span>}
+            <span>{label as string}</span>
+            {badge && <span className="nav-badge">{badge as string}</span>}
           </Link>
         ))}
       </nav>
     </aside>
-  )
+  );
 }

@@ -1,24 +1,26 @@
-import { drizzle } from 'drizzle-orm/postgres-js'
-import { sql } from 'drizzle-orm'
-import postgres from 'postgres'
-import * as schema from './schema'
-import { config } from '../lib/config'
+import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { config } from "../lib/config";
+import * as schema from "./schema";
 
-const client = postgres(config.db.url)
-export const db = drizzle(client, { schema })
+const client = postgres(config.db.url);
+export const db = drizzle(client, { schema });
 
 // Create readonly database connection for AI Star Task
-const readOnlyUrl = config.db.url
-  .replace(/postgres:\/\/[^:]+:[^@]+@/, 'postgres://analytics_readonly:readonly_password@')
+const readOnlyUrl = config.db.url.replace(
+  /postgres:\/\/[^:]+:[^@]+@/,
+  "postgres://analytics_readonly:readonly_password@",
+);
 
-const readOnlyClient = postgres(readOnlyUrl)
-export const readOnlyDb = drizzle(readOnlyClient, { schema })
-
+const readOnlyClient = postgres(readOnlyUrl);
+export const readOnlyDb = drizzle(readOnlyClient, { schema });
 
 // Ensure the readonly user exists on startup
 const setupReadonlyRole = async () => {
   try {
-    await db.execute(sql.raw(`
+    await db.execute(
+      sql.raw(`
       DO $$
       BEGIN
         IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'analytics_readonly') THEN
@@ -29,11 +31,12 @@ const setupReadonlyRole = async () => {
         END IF;
       END
       $$;
-    `))
-    console.log('🛡️ Read-Only database role for AI is ready')
+    `),
+    );
+    console.log("🛡️ Read-Only database role for AI is ready");
   } catch (err) {
-    console.error('Failed to setup readonly role:', err)
+    console.error("Failed to setup readonly role:", err);
   }
-}
+};
 
-setupReadonlyRole()
+setupReadonlyRole();

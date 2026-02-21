@@ -1,129 +1,137 @@
 // ── Ticket row (list view) ─────────────────────────────────────────────
 export interface TicketRow {
-  id: number
-  guid: string
-  segment: 'Mass' | 'VIP' | 'Priority' | string
-  description: string
-  city: string | null
-  latitude: number | null
-  longitude: number | null
-  source: string | null
-  createdAt: string | null
+  id: number;
+  guid: string;
+  segment: "Mass" | "VIP" | "Priority" | string;
+  description: string;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  source: string | null;
+  createdAt: string | null;
   // AI analysis
-  ticketType: string | null
-  sentimentVal: 'Позитивный' | 'Нейтральный' | 'Негативный' | string | null
-  priority: number | null
-  language: 'RU' | 'KZ' | 'ENG' | string | null
-  summary: string | null
-  recommendation: string | null
+  ticketType: string | null;
+  sentimentVal: "Позитивный" | "Нейтральный" | "Негативный" | string | null;
+  priority: number | null;
+  language: "RU" | "KZ" | "ENG" | string | null;
+  summary: string | null;
+  recommendation: string | null;
   // Assignment
-  assignmentId: number | null
-  assignmentReason: string | null
-  assignedAt: string | null
+  assignmentId: number | null;
+  assignmentReason: string | null;
+  assignedAt: string | null;
   // Manager
-  managerId: number | null
-  managerName: string | null
-  managerPosition: string | null
-  managerOffice: string | null
-  managerSkills: string[] | null
-  managerLoad: number | null
+  managerId: number | null;
+  managerName: string | null;
+  managerPosition: string | null;
+  managerOffice: string | null;
+  managerSkills: string[] | null;
+  managerLoad: number | null;
 }
 
 // ── Ticket detail (full row from join) ────────────────────────────────
 export interface TicketDetail {
   tickets: {
-    id: number
-    guid: string
-    gender: string | null
-    birthDate: string | null
-    segment: string | null
-    description: string | null
-    country: string | null
-    city: string | null
-    street: string | null
-    house: string | null
-    latitude: number | null
-    longitude: number | null
-    source: string | null
-    createdAt: string | null
-  }
+    id: number;
+    guid: string;
+    gender: string | null;
+    birthDate: string | null;
+    segment: string | null;
+    description: string | null;
+    country: string | null;
+    city: string | null;
+    street: string | null;
+    house: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    source: string | null;
+    createdAt: string | null;
+  };
   ticket_analysis: {
-    id: number | null
-    ticketType: string | null
-    sentiment: string | null
-    priority: number | null
-    language: string | null
-    summary: string | null
-    recommendation: string | null
-    processedAt: string | null
-  } | null
+    id: number | null;
+    ticketType: string | null;
+    sentiment: string | null;
+    priority: number | null;
+    language: string | null;
+    summary: string | null;
+    recommendation: string | null;
+    processedAt: string | null;
+  } | null;
   managers: {
-    id: number | null
-    name: string | null
-    position: string | null
-    office: string | null
-    skills: string[] | null
-    currentLoad: number | null
-  } | null
+    id: number | null;
+    name: string | null;
+    position: string | null;
+    office: string | null;
+    skills: string[] | null;
+    currentLoad: number | null;
+  } | null;
   assignments: {
-    id: number | null
-    assignedAt: string | null
-    assignmentReason: string | null
-  } | null
+    id: number | null;
+    assignedAt: string | null;
+    assignmentReason: string | null;
+  } | null;
   business_units: {
-    id: number | null
-    office: string | null
-    address: string | null
-    latitude: number | null
-    longitude: number | null
-  } | null
+    id: number | null;
+    office: string | null;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  } | null;
 }
 
 // ── Stats ─────────────────────────────────────────────────────────────
 export interface StatTotals {
-  total_tickets: number
-  avg_priority: number
-  negative_count: number
-  vip_count: number
+  total_tickets: number;
+  avg_priority: number;
+  negative_count: number;
+  vip_count: number;
 }
 
-export interface StatItem { name: string; count: number }
-export interface ManagerLoad { name: string; office: string; load: number; position: string }
+export interface StatItem {
+  name: string;
+  count: number;
+}
+export interface ManagerLoad {
+  name: string;
+  office: string;
+  load: number;
+  position: string;
+}
 
 export interface Stats {
-  totals: StatTotals
-  byType: StatItem[]
-  bySentiment: StatItem[]
-  byOffice: StatItem[]
-  bySegment: StatItem[]
-  managerLoads: ManagerLoad[]
+  totals: StatTotals;
+  byType: StatItem[];
+  bySentiment: StatItem[];
+  byOffice: StatItem[];
+  bySegment: StatItem[];
+  managerLoads: ManagerLoad[];
 }
 
 // ── Manager ───────────────────────────────────────────────────────────
 export interface Manager {
-  id: number
-  name: string
-  position: string | null
-  office: string | null
-  skills: string[] | null
-  currentLoad: number | null
+  id: number;
+  name: string;
+  position: string | null;
+  office: string | null;
+  skills: string[] | null;
+  currentLoad: number | null;
 }
 
 // ── Star Task ─────────────────────────────────────────────────────────
 export interface StarTaskResult {
-  type: 'text' | 'sql_result' | 'error'
-  text: string
+  type: "text" | "sql_result" | "error";
+  text: string;
   data?: {
-    sql: string
-    columns: string[]
-    rows: unknown[][]
-    chartType: 'bar' | 'pie' | 'line'
-    chartTitle: string
-  }
+    sql: string;
+    columns: string[];
+    rows: unknown[][];
+    chartType: "bar" | "pie" | "line";
+    chartTitle: string;
+  };
 }
 
 // ── Process result ────────────────────────────────────────────────────
 export interface ProcessResult {
-  count: number
-  errors: string[]
+  count: number;
+  errors: string[];
 }

@@ -1,14 +1,14 @@
-import Redis from 'ioredis'
-import { config } from '../lib/config'
+import Redis from "ioredis";
+import { config } from "../lib/config";
 
 export const redis = new Redis({
   host: config.redis.host,
   port: config.redis.port,
-})
+});
 
-redis.on('error', (err) => {
-  console.error('Redis connection error:', err)
-})
+redis.on("error", (err) => {
+  console.error("Redis connection error:", err);
+});
 
 /**
  * Atomically get the current Round Robin counter value and increment it.
@@ -16,20 +16,20 @@ redis.on('error', (err) => {
  */
 export async function getAndIncrementRR(key: string): Promise<number> {
   // INCR returns the value AFTER incrementing, so subtract 1 to get the "before" value.
-  const after = await redis.incr(`rr:${key}`)
-  return after - 1
+  const after = await redis.incr(`rr:${key}`);
+  return after - 1;
 }
 
 // Stats cache — invalidated after each processing run (TTL 60 sec)
 export async function cacheStats(data: object): Promise<void> {
-  await redis.set('cache:stats', JSON.stringify(data), 'EX', 60)
+  await redis.set("cache:stats", JSON.stringify(data), "EX", 60);
 }
 
 export async function getCachedStats(): Promise<object | null> {
-  const raw = await redis.get('cache:stats')
-  return raw ? JSON.parse(raw) : null
+  const raw = await redis.get("cache:stats");
+  return raw ? JSON.parse(raw) : null;
 }
 
 export async function invalidateStatsCache(): Promise<void> {
-  await redis.del('cache:stats')
+  await redis.del("cache:stats");
 }
