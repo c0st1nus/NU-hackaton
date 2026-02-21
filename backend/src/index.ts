@@ -10,6 +10,7 @@ import { starTaskRoutes } from "./routes/star-task";
 import { statsRoutes as baseStatsRoutes } from "./routes/stats";
 import { ticketsRoutes as baseTicketsRoutes } from "./routes/tickets";
 import { businessUnitsRoutes } from "./routes/business-units";
+import { ingestRoutes } from "./routes/ingest";
 import { ensureBucket } from "./services/minio";
 import { initDb } from "./db";
 import { jwt } from "@elysiajs/jwt";
@@ -39,6 +40,7 @@ const app = new Elysia()
   .get("/health", () => ({ status: "ok", timestamp: new Date().toISOString() }))
   .use(authRoutes)
   .use(dataLoaderRoutes)
+  .use(ingestRoutes)
   .group("/api", (api) =>
     api
       .onBeforeHandle(({ user, set }) => {
@@ -58,3 +60,10 @@ const app = new Elysia()
 
 console.log(`🔥 FIRE API running on http://localhost:${config.port}`);
 console.log(`📖 Swagger: http://localhost:${config.port}/docs`);
+
+// ── Start analysis workers ──────────────────────────────────────────────────
+import { startWorkers } from "./services/queue";
+import { handleTicketAnalysis } from "./jobs/analysis.worker";
+
+startWorkers(3, handleTicketAnalysis);
+console.log("🤖 Analysis workers started (concurrency: 3)");

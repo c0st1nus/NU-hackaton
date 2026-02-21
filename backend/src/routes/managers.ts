@@ -1,5 +1,6 @@
 import { and, asc, eq } from "drizzle-orm";
 import { Elysia, t } from "elysia";
+import * as bcrypt from "bcryptjs";
 import { db } from "../db";
 import { assignments, managers, users } from "../db/schema";
 
@@ -60,11 +61,13 @@ export const managersRoutes = new Elysia({ prefix: "/managers" })
       }
 
       // Optionally update user role if provided and manager is linked to a user
-      if (body.role && updated.userId) {
-        await db
-          .update(users)
-          .set({ role: body.role })
-          .where(eq(users.id, updated.userId));
+      if (updated.userId) {
+        const userUpdate: Record<string, any> = {};
+        if (body.role) userUpdate.role = body.role;
+        if (body.newPassword) userUpdate.passwordHash = await bcrypt.hash(body.newPassword, 10);
+        if (Object.keys(userUpdate).length > 0) {
+          await db.update(users).set(userUpdate).where(eq(users.id, updated.userId));
+        }
       }
 
       return updated;
@@ -76,6 +79,7 @@ export const managersRoutes = new Elysia({ prefix: "/managers" })
         office: t.Optional(t.String()),
         skills: t.Optional(t.Array(t.String())),
         role: t.Optional(t.String()),
+        newPassword: t.Optional(t.String()),
       }),
     }
   )

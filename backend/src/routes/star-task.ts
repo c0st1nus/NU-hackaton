@@ -4,47 +4,9 @@ import { jwt } from "@elysiajs/jwt";
 import { cookie } from "@elysiajs/cookie";
 import { readOnlyDb } from "../db";
 import { config } from "../lib/config";
+import { prompts } from "../lib/prompts";
 
-const SYSTEM_PROMPT = `Ты умный AI-Аналитик системы БДС (Служба Поддержки). 
-У тебя есть доступ к базе данных PostgreSQL.
 
-Схема таблиц:
-- tickets(id, guid, gender, birth_date, segment, description, country, city, street, house, latitude, longitude, source, created_at)
-- ticket_analysis(id, ticket_id, ticket_type, sentiment, priority, language, summary, recommendation, processed_at)
-- managers(id, name, position, office, skills, current_load)
-- business_units(id, office, address, latitude, longitude)
-- assignments(id, ticket_id, analysis_id, manager_id, office_id, assigned_at, assignment_reason)
-
-Типы: ticket_type = Жалоба|Смена данных|Консультация|Претензия|Неработоспособность приложения|Мошеннические действия|Спам
-sentiment = Позитивный|Нейтральный|Негативный
-segment = Mass|VIP|Priority
-language = RU|KZ|ENG
-
-ВАЖНЫЕ ПРАВИЛА JOIN & БЕЗОПАСНОСТЬ:
-- tickets -> ticket_analysis: ON tickets.id = ticket_analysis.ticket_id
-- tickets -> assignments: ON tickets.id = assignments.ticket_id
-- assignments -> managers: ON assignments.manager_id = managers.id
-- assignments -> business_units: ON assignments.office_id = business_units.id
-- БЕЗОПАСНОСТЬ: Всегда добавляй условие WHERE company_id = {companyId} в каждый запрос, чтобы пользователь видел только данные своей компании. Не гадай ID, он будет подставлен в контекст.
-
-ИНСТРУКЦИЯ К ОТВЕТУ:
-Ты ОБЯЗАН ответить строго в формате JSON. Выбери один из двух вариантов:
-
-Вариант 1 (Простой ответ/общение) — если вопрос не требует выгрузки данных из базы:
-{
-  "type": "text",
-  "text": "Твой ответ пользователю"
-}
-
-Вариант 2 (Запрос к БД) — если пользователь просит показать статистику, топ, графики или данные:
-{
-  "type": "sql",
-  "thought": "Краткое логическое объяснение, зачем я делаю этот запрос",
-  "sql": "SELECT ...",
-  "chartTitle": "Заголовок для графика (например: Топ 5 городов)"
-}
-
-В SQL всегда используй только существующие таблицы и поля. Никакого markdown, только чистый JSON.`;
 
 const MUTATING_SQL_REGEX =
   /(DROP|DELETE|UPDATE|INSERT|TRUNCATE|ALTER|GRANT|CREATE|REPLACE|EXECUTE|CALL|COPY)\s+/i;
@@ -80,7 +42,7 @@ export const starTaskRoutes = new Elysia({ prefix: "/star-task" })
 
     // We send the whole conversation to the LLM
     const ollamaMessages = [
-      { role: "system", content: SYSTEM_PROMPT.replace("{companyId}", companyId.toString()) },
+      { role: "system", content: prompts.star_task.system.replace("{companyId}", companyId.toString()) },
       ...messages,
     ];
 
@@ -178,8 +140,7 @@ export const starTaskRoutes = new Elysia({ prefix: "/star-task" })
                     messages: [
                       {
                         role: "system",
-                        content:
-                          "Ты умный бизнес-аналитик. Тебе дали вопрос пользователя и результат SQL-запроса в виде JSON. Твоя задача: кратко (в 1-3 предложениях) проанализировать эти данные и дать чёткий вывод или ответ на вопрос пользователя. Не пиши технические детали про SQL-запросы или как ты получил данные, просто дай аналитический ответ основанный на данных.",
+                        content: prompts.star_task.analytics,
                       },
                       {
                         role: "user",
@@ -253,7 +214,7 @@ export const starTaskRoutes = new Elysia({ prefix: "/star-task" })
                   body: JSON.stringify({
                     model: config.llm.model,
                     messages: [
-                      { role: "system", content: SYSTEM_PROMPT },
+                      { role: "system", content: prompts.star_task.system },
                       { role: "user", content: lastMessage },
                       {
                         role: "assistant",

@@ -141,6 +141,21 @@ export const dataLoaderRoutes = new Elysia()
              // Clean up memory
              previewStore.delete(previewId);
 
+             // ── Enqueue for AI analysis ────────────────────────────────────
+             try {
+               const { normalizeTicket } = await import("../services/normalize");
+               const { enqueueTickets } = await import("../services/queue");
+
+               const unified = data.map((row: any) =>
+                 normalizeTicket("csv", row, user.companyId as number),
+               );
+               await enqueueTickets(unified);
+               console.log(`[Data Loader] Enqueued ${unified.length} tickets for analysis`);
+             } catch (queueErr) {
+               console.error("[Data Loader] Failed to enqueue for analysis:", queueErr);
+               // Non-fatal — tickets are saved, analysis can run later via /process
+             }
+
              return { success: true, count: data.length };
           } catch(e) {
              console.error("Error inserting data:", e);

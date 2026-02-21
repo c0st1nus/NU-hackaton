@@ -124,10 +124,10 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
 
   // POST /tickets/process — trigger batch processing (calls teammate's service)
   .post("/process", async () => {
-    // const { processAllTickets } = await import('../services/processing')
-    // const result = await processAllTickets()
-    // await invalidateStatsCache()
-    return 200;
+    const { processAllTickets } = await import("../services/processing");
+    const result = await processAllTickets();
+    await invalidateStatsCache();
+    return result;
   })
 
   // PUT /tickets/:id — update a ticket
