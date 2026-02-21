@@ -142,7 +142,7 @@ export default function TicketsPage() {
                 <th>{t.dashboard.tableSentiment}</th>
                 <th>{t.dashboard.tableLang}</th>
                 <th>{t.dashboard.tableManager}</th>
-                <th>Город</th>
+                <th>Офис</th>
               </tr>
             </thead>
             <tbody>
@@ -219,7 +219,7 @@ export default function TicketsPage() {
                       {t.managerName ?? "—"}
                     </td>
                     <td style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                      {t.city ?? "—"}
+                      {t.businessUnitOffice ?? "—"}
                     </td>
                   </tr>
                 ))

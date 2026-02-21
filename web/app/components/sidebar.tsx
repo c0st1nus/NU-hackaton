@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  Building2,
   DownloadCloud,
   GitBranch,
   Inbox,
@@ -104,6 +105,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             >
               <UserPlus size={17} />
               <span>{t.sidebar.manageTeam as string}</span>
+            </Link>
+            <Link
+              href="/dashboard/business-units"
+              className={`nav-item ${path.startsWith("/dashboard/business-units") ? "active" : ""}`}
+              onClick={onClose}
+            >
+              <Building2 size={17} />
+              <span>Офисы</span>
             </Link>
           </>
         )}

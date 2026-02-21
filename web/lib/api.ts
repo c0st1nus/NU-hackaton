@@ -1,4 +1,5 @@
 import type {
+  BusinessUnit,
   Manager,
   ProcessResult,
   StarTaskResult,
@@ -56,9 +57,42 @@ export const api = {
   },
   managers: {
     list: () => apiFetch<Manager[]>("/api/managers"),
+    update: (id: number, data: Partial<Manager> & { role?: string }) =>
+      apiFetch<Manager>(`/api/managers/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: number) =>
+      apiFetch<{ success: boolean }>(`/api/managers/${id}`, {
+        method: "DELETE",
+      }),
   },
   assignments: {
     list: () => apiFetch<unknown[]>("/api/assignments"),
+  },
+  businessUnits: {
+    list: () => apiFetch<BusinessUnit[]>("/api/business-units"),
+    suggestions: (q: string, city?: string) => {
+      const params = new URLSearchParams({ q });
+      if (city) params.set("city", city);
+      return apiFetch<{ displayName: string; latitude: number; longitude: number }[]>(
+        `/api/business-units/suggestions?${params}`
+      );
+    },
+    create: (data: Partial<BusinessUnit>) =>
+      apiFetch<BusinessUnit>("/api/business-units", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: number, data: Partial<BusinessUnit>) =>
+      apiFetch<BusinessUnit>(`/api/business-units/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: number) =>
+      apiFetch<{ success: boolean }>(`/api/business-units/${id}`, {
+        method: "DELETE",
+      }),
   },
   starTask: {
     query: (q: string) =>

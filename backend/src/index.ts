@@ -9,6 +9,7 @@ import { managersRoutes } from "./routes/managers";
 import { starTaskRoutes } from "./routes/star-task";
 import { statsRoutes as baseStatsRoutes } from "./routes/stats";
 import { ticketsRoutes as baseTicketsRoutes } from "./routes/tickets";
+import { businessUnitsRoutes } from "./routes/business-units";
 import { ensureBucket } from "./services/minio";
 import { initDb } from "./db";
 import { jwt } from "@elysiajs/jwt";
@@ -50,6 +51,7 @@ const app = new Elysia()
       .use(assignmentsRoutes)
       .use(managersRoutes)
       .use(baseStatsRoutes)
+      .use(businessUnitsRoutes)
   )
   .use(starTaskRoutes)
   .listen(config.port);

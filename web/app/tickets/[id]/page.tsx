@@ -12,7 +12,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import type { TicketDetail, TicketRow } from "@/types";
+import type { BusinessUnit, TicketDetail, TicketRow } from "@/types";
 import { useI18n } from "../../../dictionaries/i18n";
 import {
   LangBadge,
@@ -57,6 +57,12 @@ export default function TicketDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Load business units for the dropdown
+  const [buList, setBuList] = useState<BusinessUnit[]>([]);
+  useEffect(() => {
+    api.businessUnits.list().then(setBuList).catch(() => {});
+  }, []);
+
   if (loading)
     return (
       <div className="page">
@@ -92,6 +98,11 @@ export default function TicketDetailPage() {
   const a = data.ticket_analysis;
   const m = data.managers;
   const assign = data.assignments;
+  const bu = data.business_units;
+
+  // Prefer business unit coordinates, fall back to ticket's own lat/lng
+  const mapLat = bu?.latitude ?? t.latitude;
+  const mapLng = bu?.longitude ?? t.longitude;
 
   const priority = a?.priority ?? null;
   const priorityPct = priority != null ? (priority / 10) * 100 : 0;
@@ -111,10 +122,8 @@ export default function TicketDetailPage() {
       description: t.description || "",
       segment: t.segment || "Mass",
       source: t.source || "",
-      city: t.city || "",
-      street: t.street || "",
-      house: t.house || "",
-    });
+      businessUnitId: t.businessUnitId ?? null,
+    } as any);
     setIsEditing(true);
   };
 
@@ -260,23 +269,20 @@ export default function TicketDetailPage() {
                       className="block w-full px-3 py-2 bg-(--bg) border border-(--border) rounded-md text-(--text-primary)"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Город</label>
-                    <input
-                      type="text"
-                      value={editData.city as string}
-                      onChange={(e) => setEditData({ ...editData, city: e.target.value })}
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Офис (Business Unit)</label>
+                    <select
+                      value={(editData as any).businessUnitId ?? ""}
+                      onChange={(e) => setEditData({ ...editData, businessUnitId: e.target.value ? Number(e.target.value) : null } as any)}
                       className="block w-full px-3 py-2 bg-(--bg) border border-(--border) rounded-md text-(--text-primary)"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Улица</label>
-                    <input
-                      type="text"
-                      value={editData.street as string}
-                      onChange={(e) => setEditData({ ...editData, street: e.target.value })}
-                      className="block w-full px-3 py-2 bg-(--bg) border border-(--border) rounded-md text-(--text-primary)"
-                    />
+                    >
+                      <option value="">— Не выбрано —</option>
+                      {buList.map((bu) => (
+                        <option key={bu.id} value={bu.id}>
+                          {bu.office} — {bu.address}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </>
@@ -352,11 +358,15 @@ export default function TicketDetailPage() {
               </Row>
               <Row label={tr.ticketDetail.gender}>{t.gender ?? "—"}</Row>
               <Row label={tr.ticketDetail.age}>{calcAge(t.birthDate)}</Row>
-              <Row label={tr.ticketDetail.city}>{t.city ?? "—"}</Row>
-              <Row label={tr.ticketDetail.address}>
-                {[t.street, t.house].filter(Boolean).join(", ") || "—"}
-              </Row>
-              {t.latitude != null && t.longitude != null && (
+              {bu && (
+                <>
+                  <Row label="Офис">{bu.office ?? "—"}</Row>
+                  <Row label={tr.ticketDetail.address}>
+                    {bu.address ?? "—"}
+                  </Row>
+                </>
+              )}
+              {mapLat != null && mapLng != null && (
                 <>
                   <Row label={tr.ticketDetail.coordinates}>
                     <span
@@ -366,11 +376,11 @@ export default function TicketDetailPage() {
                         color: "var(--text-muted)",
                       }}
                     >
-                      {t.latitude.toFixed(4)}, {t.longitude.toFixed(4)}
+                      {mapLat.toFixed(4)}, {mapLng.toFixed(4)}
                     </span>
                   </Row>
                   <div style={{ marginTop: 12 }}>
-                    <Map center={[t.latitude, t.longitude]} />
+                    <Map center={[mapLat, mapLng]} />
                   </div>
                 </>
               )}

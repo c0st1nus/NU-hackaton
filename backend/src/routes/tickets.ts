@@ -33,11 +33,16 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
           guid: tickets.guid,
           segment: tickets.segment,
           description: tickets.description,
-          city: tickets.city,
           latitude: tickets.latitude,
           longitude: tickets.longitude,
           source: tickets.source,
           createdAt: tickets.createdAt,
+          // Business Unit
+          businessUnitId: businessUnits.id,
+          businessUnitOffice: businessUnits.office,
+          businessUnitAddress: businessUnits.address,
+          businessUnitLatitude: businessUnits.latitude,
+          businessUnitLongitude: businessUnits.longitude,
           // AI analysis
           ticketType: ticketAnalysis.ticketType,
           sentimentVal: ticketAnalysis.sentiment,
@@ -61,6 +66,7 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
         .leftJoin(ticketAnalysis, eq(ticketAnalysis.ticketId, tickets.id))
         .leftJoin(assignments, eq(assignments.ticketId, tickets.id))
         .leftJoin(managers, eq(managers.id, assignments.managerId))
+        .leftJoin(businessUnits, eq(businessUnits.id, tickets.businessUnitId))
         .where(
           and(
             office ? eq(managers.office, office) : undefined,
@@ -100,7 +106,7 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
       .leftJoin(ticketAnalysis, eq(ticketAnalysis.ticketId, tickets.id))
       .leftJoin(assignments, eq(assignments.ticketId, tickets.id))
       .leftJoin(managers, eq(managers.id, assignments.managerId))
-      .leftJoin(businessUnits, eq(businessUnits.id, assignments.officeId))
+      .leftJoin(businessUnits, eq(businessUnits.id, tickets.businessUnitId))
       .where(
         and(
           eq(tickets.id, Number(params.id)),
@@ -151,10 +157,7 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
           birthDate,
           gender,
           segment,
-          country,
-          city,
-          street,
-          house,
+          businessUnitId,
           description,
           status,
           notes,
@@ -169,10 +172,7 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
             birthDate,
             gender,
             segment,
-            country,
-            city,
-            street,
-            house,
+            businessUnitId,
             description,
             status,
             notes,
@@ -226,10 +226,7 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
         birthDate: t.Optional(t.String()),
         gender: t.Optional(t.String()),
         segment: t.Optional(t.String()),
-        country: t.Optional(t.String()),
-        city: t.Optional(t.String()),
-        street: t.Optional(t.String()),
-        house: t.Optional(t.String()),
+        businessUnitId: t.Optional(t.Union([t.Number(), t.Null()])),
         description: t.Optional(t.String()),
         status: t.Optional(t.String()),
         notes: t.Optional(t.String()),

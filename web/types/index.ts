@@ -1,18 +1,31 @@
+// ── Business Unit ─────────────────────────────────────────────────────
+export interface BusinessUnit {
+  id: number;
+  companyId: number;
+  office: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
 // ── Ticket row (list view) ─────────────────────────────────────────────
 export interface TicketRow {
   id: number;
   guid: string;
   segment: "Mass" | "VIP" | "Priority" | string;
   description: string;
-  city: string | null;
-  street: string | null;
-  house: string | null;
   latitude: number | null;
   longitude: number | null;
   source: string | null;
   status: string | null;
   notes: string | null;
   createdAt: string | null;
+  // Business Unit
+  businessUnitId: number | null;
+  businessUnitOffice: string | null;
+  businessUnitAddress: string | null;
+  businessUnitLatitude: number | null;
+  businessUnitLongitude: number | null;
   // AI analysis
   ticketType: string | null;
   sentimentVal: "Позитивный" | "Нейтральный" | "Негативный" | string | null;
@@ -42,10 +55,7 @@ export interface TicketDetail {
     birthDate: string | null;
     segment: string | null;
     description: string | null;
-    country: string | null;
-    city: string | null;
-    street: string | null;
-    house: string | null;
+    businessUnitId: number | null;
     latitude: number | null;
     longitude: number | null;
     source: string | null;
@@ -116,11 +126,14 @@ export interface Stats {
 // ── Manager ───────────────────────────────────────────────────────────
 export interface Manager {
   id: number;
+  userId: number | null;
   name: string;
   position: string | null;
   office: string | null;
   skills: string[] | null;
   currentLoad: number | null;
+  email: string | null;
+  role: string | null;
 }
 
 // ── Star Task ─────────────────────────────────────────────────────────
