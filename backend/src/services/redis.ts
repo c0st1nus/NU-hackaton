@@ -21,15 +21,18 @@ export async function getAndIncrementRR(key: string): Promise<number> {
 }
 
 // Stats cache — invalidated after each processing run (TTL 60 sec)
-export async function cacheStats(data: object): Promise<void> {
-  await redis.set("cache:stats", JSON.stringify(data), "EX", 60);
+export async function cacheStats(data: object, keySuffix = "global"): Promise<void> {
+  await redis.set(`cache:stats:${keySuffix}`, JSON.stringify(data), "EX", 60);
 }
 
-export async function getCachedStats(): Promise<object | null> {
-  const raw = await redis.get("cache:stats");
+export async function getCachedStats(keySuffix = "global"): Promise<object | null> {
+  const raw = await redis.get(`cache:stats:${keySuffix}`);
   return raw ? JSON.parse(raw) : null;
 }
 
 export async function invalidateStatsCache(): Promise<void> {
-  await redis.del("cache:stats");
+  const keys = await redis.keys("cache:stats:*");
+  if (keys.length > 0) {
+    await redis.del(...keys);
+  }
 }

@@ -8,9 +8,41 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
+// ─── companies ────────────────────────────────────────────────────────────────
+export const companies = pgTable("companies", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ─── users ────────────────────────────────────────────────────────────────────
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => companies.id),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash"),
+  name: text("name"),
+  picture: text("picture"),
+  role: varchar("role", { length: 32 }).default("USER"), // ADMIN, MANAGER, USER
+  googleId: text("google_id").unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ─── invitations ──────────────────────────────────────────────────────────────
+export const invitations = pgTable("invitations", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => companies.id),
+  role: varchar("role", { length: 32 }).notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isUsed: integer("is_used").default(0), // 0 or 1
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // ─── tickets ──────────────────────────────────────────────────────────────────
 export const tickets = pgTable("tickets", {
   id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => companies.id),
   guid: varchar("guid", { length: 64 }).notNull().unique(),
   gender: varchar("gender", { length: 16 }),
   birthDate: text("birth_date"),
@@ -23,6 +55,8 @@ export const tickets = pgTable("tickets", {
   latitude: real("latitude"),
   longitude: real("longitude"),
   source: varchar("source", { length: 64 }),
+  status: varchar("status", { length: 32 }).default("Новый"),
+  notes: text("notes").default(""),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -42,6 +76,8 @@ export const ticketAnalysis = pgTable("ticket_analysis", {
 // ─── managers ─────────────────────────────────────────────────────────────────
 export const managers = pgTable("managers", {
   id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => companies.id),
+  userId: integer("user_id").references(() => users.id),
   name: text("name").notNull(),
   position: text("position"),
   office: text("office"),
@@ -52,6 +88,7 @@ export const managers = pgTable("managers", {
 // ─── business_units ───────────────────────────────────────────────────────────
 export const businessUnits = pgTable("business_units", {
   id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => companies.id),
   office: text("office").notNull(),
   address: text("address"),
   latitude: real("latitude"),

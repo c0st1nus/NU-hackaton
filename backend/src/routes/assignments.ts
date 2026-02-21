@@ -6,7 +6,7 @@ import { assignments, managers, ticketAnalysis, tickets } from "../db/schema";
 export const assignmentsRoutes = new Elysia({ prefix: "/assignments" })
 
   // GET /assignments — all assignments with ticket + manager info
-  .get("/", async () => {
+  .get("/", async ({ user }) => {
     const rows = await db
       .select({
         id: assignments.id,
@@ -28,6 +28,7 @@ export const assignmentsRoutes = new Elysia({ prefix: "/assignments" })
       .leftJoin(tickets, eq(tickets.id, assignments.ticketId))
       .leftJoin(ticketAnalysis, eq(ticketAnalysis.ticketId, tickets.id))
       .leftJoin(managers, eq(managers.id, assignments.managerId))
+      .where(eq(tickets.companyId, (user as any).companyId))
       .orderBy(assignments.assignedAt);
 
     return rows;

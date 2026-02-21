@@ -11,7 +11,8 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import type { TicketDetail } from "@/types";
+import { useAuth } from "@/lib/auth-context";
+import type { TicketDetail, TicketRow } from "@/types";
 import { useI18n } from "../../../dictionaries/i18n";
 import {
   LangBadge,
@@ -33,9 +34,20 @@ export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { t: tr } = useI18n();
+  const { user } = useAuth();
+  
   const [data, setData] = useState<TicketDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Form states
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState<Partial<TicketRow>>({});
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const canFullEdit = user?.role === "ADMIN" || user?.role === "ANALYST";
+  const canManageStatus = canFullEdit || user?.role === "MANAGER";
 
   useEffect(() => {
     api.tickets
@@ -92,34 +104,195 @@ export default function TicketDetailPage() {
           : "var(--danger)"
       : "var(--border)";
 
+  const startEdit = () => {
+    setEditData({
+      status: t.status || "Новый",
+      notes: t.notes || "",
+      description: t.description || "",
+      segment: t.segment || "Mass",
+      source: t.source || "",
+      city: t.city || "",
+      street: t.street || "",
+      house: t.house || "",
+    });
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (canFullEdit) {
+        await api.tickets.update(Number(id), editData);
+      } else {
+        await api.tickets.update(Number(id), {
+          status: editData.status,
+          notes: editData.notes,
+        });
+      }
+      const newData = await api.tickets.get(Number(id));
+      setData(newData);
+      setIsEditing(false);
+    } catch (e) {
+      alert("Failed to save ticket");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Вы уверены, что хотите удалить этот тикет?")) return;
+    setIsDeleting(true);
+    try {
+      await api.tickets.delete(Number(id));
+      router.push("/dashboard");
+    } catch (e) {
+      alert("Failed to delete ticket");
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="page">
       {/* Back button + header */}
-      <div className="page-header">
-        <button
-          className="btn btn-secondary btn-sm"
-          onClick={() => router.push("/dashboard")}
-          style={{ marginBottom: 12 }}
-        >
-          <ArrowLeft size={14} /> {tr.ticketDetail.back}
-        </button>
-        <h1 className="page-title">Тикет #{t.guid?.slice(0, 16) || t.id}</h1>
-        <p
-          className="page-subtitle"
-          style={{
-            display: "flex",
-            gap: 8,
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          <SegmentBadge segment={t.segment} />
-          <LangBadge lang={a?.language ?? null} />
-          <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
-            {t.createdAt ? new Date(t.createdAt).toLocaleString("ru-RU") : ""}
-          </span>
-        </p>
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => router.push("/dashboard")}
+            style={{ marginBottom: 12 }}
+          >
+            <ArrowLeft size={14} /> {tr.ticketDetail.back}
+          </button>
+          <h1 className="page-title">Тикет #{t.guid?.slice(0, 16) || t.id}</h1>
+          <p
+            className="page-subtitle"
+            style={{
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            <span className="badge" style={{ background: "var(--bg-card)", border: "1px solid var(--border)", color: "white" }}>
+              {t.status || "Новый"}
+            </span>
+            <SegmentBadge segment={t.segment} />
+            <LangBadge lang={a?.language ?? null} />
+            <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
+              {t.createdAt ? new Date(t.createdAt).toLocaleString("ru-RU") : ""}
+            </span>
+          </p>
+        </div>
+        {canManageStatus && !isEditing && (
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn btn-secondary btn-sm" onClick={startEdit}>
+              Редактировать
+            </button>
+            {canFullEdit && (
+              <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={isDeleting}>
+                Удалить
+              </button>
+            )}
+          </div>
+        )}
       </div>
+
+      {isEditing ? (
+        <div className="card" style={{ marginBottom: 24 }}>
+          <div className="card-header">
+            <h3 className="card-title">Редактирование тикета</h3>
+          </div>
+          <div className="card-body mt-4 flex flex-col gap-4 max-w-2xl">
+            {canManageStatus && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Статус</label>
+                  <select
+                    value={editData.status as string}
+                    onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+                    className="block w-full px-3 py-2 bg-(--bg) border border-(--border) rounded-md text-(--text-primary)"
+                  >
+                    <option value="Новый">Новый</option>
+                    <option value="В работе">В работе</option>
+                    <option value="Решен">Решен</option>
+                    <option value="Закрыт">Закрыт</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Заметки менеджера</label>
+                  <textarea
+                    rows={3}
+                    value={editData.notes as string}
+                    onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+                    className="block w-full px-3 py-2 bg-(--bg) border border-(--border) rounded-md text-(--text-primary) whitespace-pre-wrap"
+                  />
+                </div>
+              </>
+            )}
+            
+            {canFullEdit && (
+              <>
+                <div className="border-t border-(--border) pt-4 mt-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Описание обращения</label>
+                  <textarea
+                    rows={4}
+                    value={editData.description as string}
+                    onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                    className="block w-full px-3 py-2 bg-(--bg) border border-(--border) rounded-md text-(--text-primary) whitespace-pre-wrap"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Сегмент</label>
+                    <input
+                      type="text"
+                      value={editData.segment as string}
+                      onChange={(e) => setEditData({ ...editData, segment: e.target.value })}
+                      className="block w-full px-3 py-2 bg-(--bg) border border-(--border) rounded-md text-(--text-primary)"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Источник</label>
+                    <input
+                      type="text"
+                      value={editData.source as string}
+                      onChange={(e) => setEditData({ ...editData, source: e.target.value })}
+                      className="block w-full px-3 py-2 bg-(--bg) border border-(--border) rounded-md text-(--text-primary)"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Город</label>
+                    <input
+                      type="text"
+                      value={editData.city as string}
+                      onChange={(e) => setEditData({ ...editData, city: e.target.value })}
+                      className="block w-full px-3 py-2 bg-(--bg) border border-(--border) rounded-md text-(--text-primary)"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Улица</label>
+                    <input
+                      type="text"
+                      value={editData.street as string}
+                      onChange={(e) => setEditData({ ...editData, street: e.target.value })}
+                      className="block w-full px-3 py-2 bg-(--bg) border border-(--border) rounded-md text-(--text-primary)"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-4 mt-6">
+              <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                {saving ? "Сохранение..." : "Сохранить"}
+              </button>
+              <button className="btn btn-secondary" onClick={() => setIsEditing(false)} disabled={saving}>
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="detail-grid">
         {/* Column 1: Текст обращения + Клиент */}
@@ -147,6 +320,16 @@ export default function TicketDetailPage() {
               >
                 {t.description || "—"}
               </p>
+              {t.notes && (
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+                  <h4 style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 8 }}>
+                    Заметки менеджера
+                  </h4>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--text-secondary)", whiteSpace: "pre-wrap" }}>
+                    {t.notes}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

@@ -5,9 +5,13 @@ export interface TicketRow {
   segment: "Mass" | "VIP" | "Priority" | string;
   description: string;
   city: string | null;
+  street: string | null;
+  house: string | null;
   latitude: number | null;
   longitude: number | null;
   source: string | null;
+  status: string | null;
+  notes: string | null;
   createdAt: string | null;
   // AI analysis
   ticketType: string | null;
@@ -45,6 +49,8 @@ export interface TicketDetail {
     latitude: number | null;
     longitude: number | null;
     source: string | null;
+    status: string | null;
+    notes: string | null;
     createdAt: string | null;
   };
   ticket_analysis: {

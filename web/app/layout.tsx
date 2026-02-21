@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { I18nProvider } from "../dictionaries/i18n";
+import { AuthProvider } from "../lib/auth-context";
 import { AppShell } from "./components/app-shell";
 import "../styles/globals.css";
 
@@ -23,8 +24,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+             __html: `
+              try {
+                if (localStorage.getItem('theme') === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+                  document.documentElement.setAttribute('data-theme', 'light');
+                } else {
+                  document.documentElement.setAttribute('data-theme', 'dark');
+                }
+              } catch (_) {}
+            `
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -37,9 +51,11 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <I18nProvider>
-          <AppShell>{children}</AppShell>
-        </I18nProvider>
+        <AuthProvider>
+          <I18nProvider>
+            <AppShell>{children}</AppShell>
+          </I18nProvider>
+        </AuthProvider>
       </body>
     </html>
   );

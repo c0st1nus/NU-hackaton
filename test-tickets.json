@@ -1,0 +1,12 @@
+[
+  {
+    "segment": "VIP",
+    "description": "JSON ticket: Please review my investment portfolio.",
+    "city": "London"
+  },
+  {
+    "segment": "Standard",
+    "description": "JSON ticket: Can I change my email address?",
+    "city": "Paris"
+  }
+]

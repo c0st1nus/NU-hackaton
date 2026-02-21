@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { config } from "../lib/config";
 import * as schema from "./schema";
 
@@ -39,4 +40,14 @@ const setupReadonlyRole = async () => {
   }
 };
 
-setupReadonlyRole();
+// Export a runner that ensures DB is ready
+export const initDb = async () => {
+  try {
+    console.log("🔄 Running migrations...");
+    await migrate(db, { migrationsFolder: "./src/db/migrations" });
+    console.log("✅ Migrations completed");
+    await setupReadonlyRole();
+  } catch (err) {
+    console.error("❌ Database initialization failed:", err);
+  }
+};

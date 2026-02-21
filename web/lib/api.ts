@@ -13,6 +13,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
+    credentials: "include", // Essential for auth cookies
     cache: "no-store",
   });
   if (!res.ok) {
@@ -23,23 +24,41 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  get: <T>(path: string, init?: RequestInit) =>
+    apiFetch<T>(path, { ...init, method: "GET" }),
+  post: <T>(path: string, body: any, init?: RequestInit) =>
+    apiFetch<T>(path, { ...init, method: "POST", body: JSON.stringify(body) }),
+  put: <T>(path: string, body: any, init?: RequestInit) =>
+    apiFetch<T>(path, { ...init, method: "PUT", body: JSON.stringify(body) }),
+  delete: <T>(path: string, init?: RequestInit) =>
+    apiFetch<T>(path, { ...init, method: "DELETE" }),
+
   tickets: {
     list: (params?: Record<string, string>) => {
       const qs = params ? "?" + new URLSearchParams(params).toString() : "";
-      return apiFetch<TicketRow[]>(`/tickets${qs}`);
+      return apiFetch<TicketRow[]>(`/api/tickets${qs}`);
     },
-    get: (id: number) => apiFetch<TicketDetail>(`/tickets/${id}`),
+    get: (id: number) => apiFetch<TicketDetail>(`/api/tickets/${id}`),
     process: () =>
-      apiFetch<ProcessResult>("/tickets/process", { method: "POST" }),
+      apiFetch<ProcessResult>("/api/tickets/process", { method: "POST" }),
+    update: (id: number, data: Partial<TicketRow>) =>
+      apiFetch<{ success: boolean; error?: string }>(`/api/tickets/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: number) =>
+      apiFetch<{ success: boolean; error?: string }>(`/api/tickets/${id}`, {
+        method: "DELETE",
+      }),
   },
   stats: {
-    get: () => apiFetch<Stats>("/stats"),
+    get: () => apiFetch<Stats>("/api/stats"),
   },
   managers: {
-    list: () => apiFetch<Manager[]>("/managers"),
+    list: () => apiFetch<Manager[]>("/api/managers"),
   },
   assignments: {
-    list: () => apiFetch<unknown[]>("/assignments"),
+    list: () => apiFetch<unknown[]>("/api/assignments"),
   },
   starTask: {
     query: (q: string) =>

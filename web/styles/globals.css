@@ -2,6 +2,33 @@
 
 /* ── Design tokens ───────────────────────────────────────────────────── */
 :root {
+  --bg: #0a0a0a;
+  --bg-card: #111111;
+  --sidebar-bg: #000000;
+  --sidebar-fg: #a1a1aa;
+  --sidebar-active: #ffffff;
+  --sidebar-active-bg: rgba(255, 255, 255, 0.1);
+
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+
+  --border: #27272a;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+}
+
+:root[data-theme="light"] {
   --bg: #f9fafb;
   --bg-card: #ffffff;
   --sidebar-bg: #111827;
@@ -617,7 +644,7 @@ tbody tr:hover {
   border-color: var(--primary-hover);
 }
 .btn-secondary {
-  background: #fff;
+  background: var(--bg-card);
   color: var(--text-primary);
   border-color: var(--border);
 }
@@ -634,12 +661,11 @@ tbody tr:hover {
 }
 .btn-dark {
   background: var(--text-primary);
-  color: #fff;
+  color: var(--bg);
   border-color: var(--text-primary);
 }
 .btn-dark:hover:not(:disabled) {
-  background: #374151;
-  border-color: #374151;
+  opacity: 0.9;
 }
 .btn-sm {
   padding: 6px 12px;
@@ -667,7 +693,7 @@ tbody tr:hover {
   border-radius: var(--radius);
   font-size: 14px;
   color: var(--text-primary);
-  background: #fff;
+  background: var(--bg-card);
   outline: none;
   transition: border-color 0.15s;
   width: 100%;

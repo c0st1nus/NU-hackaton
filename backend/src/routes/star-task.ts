@@ -1,5 +1,7 @@
 import { sql } from "drizzle-orm";
 import { Elysia, t } from "elysia";
+import { jwt } from "@elysiajs/jwt";
+import { cookie } from "@elysiajs/cookie";
 import { readOnlyDb } from "../db";
 import { config } from "../lib/config";
 
@@ -18,11 +20,12 @@ sentiment = Позитивный|Нейтральный|Негативный
 segment = Mass|VIP|Priority
 language = RU|KZ|ENG
 
-ВАЖНЫЕ ПРАВИЛА JOIN:
+ВАЖНЫЕ ПРАВИЛА JOIN & БЕЗОПАСНОСТЬ:
 - tickets -> ticket_analysis: ON tickets.id = ticket_analysis.ticket_id
 - tickets -> assignments: ON tickets.id = assignments.ticket_id
 - assignments -> managers: ON assignments.manager_id = managers.id
 - assignments -> business_units: ON assignments.office_id = business_units.id
+- БЕЗОПАСНОСТЬ: Всегда добавляй условие WHERE company_id = {companyId} в каждый запрос, чтобы пользователь видел только данные своей компании. Не гадай ID, он будет подставлен в контекст.
 
 ИНСТРУКЦИЯ К ОТВЕТУ:
 Ты ОБЯЗАН ответить строго в формате JSON. Выбери один из двух вариантов:
@@ -46,10 +49,28 @@ language = RU|KZ|ENG
 const MUTATING_SQL_REGEX =
   /(DROP|DELETE|UPDATE|INSERT|TRUNCATE|ALTER|GRANT|CREATE|REPLACE|EXECUTE|CALL|COPY)\s+/i;
 
-export const starTaskRoutes = new Elysia({ prefix: "/star-task" }).post(
-  "/chat",
-  async ({ body, set }) => {
-    const { messages } = body;
+export const starTaskRoutes = new Elysia({ prefix: "/star-task" })
+  .use(
+    jwt({
+      name: "jwt",
+      secret: process.env.JWT_SECRET || "super-secret-key-change-me",
+    })
+  )
+  .use(cookie())
+  .derive(async ({ jwt, cookie: { auth_token } }) => {
+    if (!auth_token?.value) return { user: null };
+    const payload = await jwt.verify(auth_token.value as string);
+    return { user: payload };
+  })
+  .post(
+    "/chat",
+    async ({ body, set, user }) => {
+      if (!user) {
+        set.status = 401;
+        return { type: "error", text: "Unauthorized" };
+      }
+      const companyId = user.companyId as number;
+      const { messages } = body;
     if (!messages || messages.length === 0) {
       set.status = 400;
       return { message: "History is empty" };
@@ -59,7 +80,7 @@ export const starTaskRoutes = new Elysia({ prefix: "/star-task" }).post(
 
     // We send the whole conversation to the LLM
     const ollamaMessages = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: SYSTEM_PROMPT.replace("{companyId}", companyId.toString()) },
       ...messages,
     ];
 
@@ -122,6 +143,16 @@ export const starTaskRoutes = new Elysia({ prefix: "/star-task" }).post(
             type: "error",
             text: "Обнаружена потенциальная SQL инъекция.",
           };
+        }
+
+        // Force company filter check
+        if (!sqlQuery.toLowerCase().includes(`company_id = ${companyId}`)) {
+          // Attempt to inject it if missing (basic heuristic)
+          if (sqlQuery.toLowerCase().includes("where")) {
+            sqlQuery = sqlQuery.replace(/where/i, `WHERE company_id = ${companyId} AND `);
+          } else {
+            sqlQuery += ` WHERE company_id = ${companyId}`;
+          }
         }
 
         // Try Execute

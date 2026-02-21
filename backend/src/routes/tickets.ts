@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { Elysia, t } from "elysia";
 import { db } from "../db";
 import {
@@ -15,7 +15,8 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
   // GET /tickets — list with filters
   .get(
     "/",
-    async ({ query }) => {
+    async ({ query, user }) => {
+      const companyId = (user as any).companyId;
       const {
         limit = "50",
         offset = "0",
@@ -69,11 +70,12 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
               : undefined,
             sentiment ? eq(ticketAnalysis.sentiment, sentiment) : undefined,
             language ? eq(ticketAnalysis.language, language) : undefined,
+            eq(tickets.companyId, companyId)
           ),
         )
         .limit(Number(limit))
         .offset(Number(offset))
-        .orderBy(assignments.assignedAt);
+        .orderBy(desc(tickets.createdAt));
 
       return rows;
     },
@@ -91,7 +93,7 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
   )
 
   // GET /tickets/:id — detailed view
-  .get("/:id", async ({ params, set }) => {
+  .get("/:id", async ({ params, set, user }) => {
     const [row] = await db
       .select()
       .from(tickets)
@@ -99,7 +101,12 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
       .leftJoin(assignments, eq(assignments.ticketId, tickets.id))
       .leftJoin(managers, eq(managers.id, assignments.managerId))
       .leftJoin(businessUnits, eq(businessUnits.id, assignments.officeId))
-      .where(eq(tickets.id, Number(params.id)))
+      .where(
+        and(
+          eq(tickets.id, Number(params.id)),
+          eq(tickets.companyId, (user as any).companyId)
+        )
+      )
       .limit(1);
 
     if (!row) {
@@ -115,4 +122,150 @@ export const ticketsRoutes = new Elysia({ prefix: "/tickets" })
     // const result = await processAllTickets()
     // await invalidateStatsCache()
     return 200;
+  })
+
+  // PUT /tickets/:id — update a ticket
+  .put(
+    "/:id",
+    async ({ params, body, set, user }) => {
+      const companyId = (user as any).companyId;
+      const role = (user as any).role;
+      const ticketId = Number(params.id);
+
+      // Verify ticket exists
+      const [existing] = await db
+        .select()
+        .from(tickets)
+        .where(and(eq(tickets.id, ticketId), eq(tickets.companyId, companyId)))
+        .limit(1);
+
+      if (!existing) {
+        set.status = 404;
+        return { error: "Ticket not found" };
+      }
+
+      if (role === "ADMIN" || role === "ANALYST") {
+        // Full update
+        const {
+          source,
+          birthDate,
+          gender,
+          segment,
+          country,
+          city,
+          street,
+          house,
+          description,
+          status,
+          notes,
+          managerId, // Optional assignment change
+        } = body as any;
+
+        // Update the ticket
+        await db
+          .update(tickets)
+          .set({
+            source,
+            birthDate,
+            gender,
+            segment,
+            country,
+            city,
+            street,
+            house,
+            description,
+            status,
+            notes,
+          })
+          .where(eq(tickets.id, ticketId));
+
+        // Update or insert assignment if managerId is provided
+        if (managerId !== undefined) {
+          const [existingAssignment] = await db
+            .select()
+            .from(assignments)
+            .where(eq(assignments.ticketId, ticketId))
+            .limit(1);
+
+          if (managerId === null) {
+            // Unassign
+            if (existingAssignment) {
+              await db.delete(assignments).where(eq(assignments.id, existingAssignment.id));
+            }
+          } else {
+            if (existingAssignment) {
+              await db
+                .update(assignments)
+                .set({ managerId, assignedAt: new Date() })
+                .where(eq(assignments.id, existingAssignment.id));
+            } else {
+              await db.insert(assignments).values({
+                ticketId,
+                managerId,
+              });
+            }
+          }
+        }
+      } else if (role === "MANAGER") {
+        // Manager can only update notes and status
+        const { status, notes } = body as any;
+        await db
+          .update(tickets)
+          .set({ status, notes })
+          .where(eq(tickets.id, ticketId));
+      } else {
+        set.status = 403;
+        return { error: "Unauthorized role" };
+      }
+
+      return { success: true };
+    },
+    {
+      body: t.Object({
+        source: t.Optional(t.String()),
+        birthDate: t.Optional(t.String()),
+        gender: t.Optional(t.String()),
+        segment: t.Optional(t.String()),
+        country: t.Optional(t.String()),
+        city: t.Optional(t.String()),
+        street: t.Optional(t.String()),
+        house: t.Optional(t.String()),
+        description: t.Optional(t.String()),
+        status: t.Optional(t.String()),
+        notes: t.Optional(t.String()),
+        managerId: t.Optional(t.Union([t.Number(), t.Null()])),
+      }),
+    }
+  )
+
+  // DELETE /tickets/:id
+  .delete("/:id", async ({ params, set, user }) => {
+    const companyId = (user as any).companyId;
+    const role = (user as any).role;
+    const ticketId = Number(params.id);
+
+    if (role !== "ADMIN" && role !== "ANALYST") {
+      set.status = 403;
+      return { error: "Only admins and analysts can delete tickets" };
+    }
+
+    // Verify exists
+    const [existing] = await db
+      .select()
+      .from(tickets)
+      .where(and(eq(tickets.id, ticketId), eq(tickets.companyId, companyId)))
+      .limit(1);
+
+    if (!existing) {
+      set.status = 404;
+      return { error: "Ticket not found" };
+    }
+
+    // Delete cascading dependencies manually or by foreign key
+    // We should delete analysis and assignments first
+    await db.delete(ticketAnalysis).where(eq(ticketAnalysis.ticketId, ticketId));
+    await db.delete(assignments).where(eq(assignments.ticketId, ticketId));
+    await db.delete(tickets).where(eq(tickets.id, ticketId));
+
+    return { success: true };
   });
