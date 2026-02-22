@@ -11,9 +11,10 @@ module.exports = {
     },
     {
       name: "fire-web",
-      script: "npm",
+      script: "bun",
       args: "run start",
       cwd: "web",
+      interpreter: "none",
       watch: false,
     }
   ]
