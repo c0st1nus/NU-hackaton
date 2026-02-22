@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-const MapInner = dynamic(() => import("./map-inner"), {
+const MapInner = dynamic(() => import("./ticket-map-inner"), {
   ssr: false,
   loading: () => (
     <div

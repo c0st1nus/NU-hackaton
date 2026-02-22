@@ -18,7 +18,7 @@ import {
   SegmentBadge,
   SentimentBadge,
 } from "../../../components/badges";
-import TicketMap from "../../../components/map";
+import TicketMap from "../../../components/ticket-map";
 import { useI18n } from "../../../dictionaries/i18n";
 
 function calcAge(birthDate: string | null): string {
