@@ -111,7 +111,6 @@ export const en = {
     companyName: "Company Name",
     signIn: "Sign In",
     register: "Register",
-    orWithGoogle: "Or continue with Google",
     noAccount: "Don't have an account?",
     hasAccount: "Already have an account?",
     acceptInvite: "Accept Invitation",

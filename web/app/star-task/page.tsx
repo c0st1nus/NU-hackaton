@@ -96,7 +96,7 @@ export default function StarTaskPage() {
         content: m.content,
       }));
 
-      const res = await fetch("http://localhost:3001/star-task/chat", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://fire.api.depa-team.com"}/star-task/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

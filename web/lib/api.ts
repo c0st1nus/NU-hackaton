@@ -8,7 +8,7 @@ import type {
   TicketRow,
 } from "@/types";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const BASE = process.env.NEXT_PUBLIC_API_URL || "https://fire.api.depa-team.com";
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {

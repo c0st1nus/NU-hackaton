@@ -6,7 +6,6 @@ import { LanguageSwitcher } from "../../../components/language-switcher";
 import { useI18n } from "../../../dictionaries/i18n";
 import { api } from "../../../lib/api";
 import { useAuth } from "../../../lib/auth-context";
-import { GoogleLoginButton } from "../../login/google-button";
 
 export default function InvitePage({
   params,
@@ -66,26 +65,7 @@ export default function InvitePage({
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <LanguageSwitcher />
         <div className="bg-card py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-border">
-          {/* We reuse Google Login Button directly to handle the invite if user prefers Google */}
-          <div className="mb-6">
-            <GoogleLoginButton mode="register" />
-            <p className="text-xs text-red-500 mt-2 text-center">
-              Wait, actually to bind invite to google we need to send the token.
-              Let's stick to email/pass for this hackathon demo or we can easily
-              adapt the Google button later.
-            </p>
-          </div>
 
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-card text-gray-400">
-                {t.auth.orEmail}
-              </span>
-            </div>
-          </div>
 
           <form className="space-y-6" onSubmit={handleAcceptInvite}>
             <div>

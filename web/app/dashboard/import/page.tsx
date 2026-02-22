@@ -47,7 +47,7 @@ export default function ImportDashboard() {
 
       // We need to use native fetch for FormData, since api.post stringifies JSON
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/data/preview`,
+        `${process.env.NEXT_PUBLIC_API_URL || "https://fire.api.depa-team.com"}/api/data/preview`,
         {
           method: "POST",
           body: formData,

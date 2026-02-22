@@ -112,7 +112,6 @@ export const ru = {
     companyName: "Название компании",
     signIn: "Войти",
     register: "Зарегистрироваться",
-    orWithGoogle: "Или продолжить через Google",
     noAccount: "Нет аккаунта?",
     hasAccount: "Уже есть аккаунт?",
     acceptInvite: "Принять приглашение",

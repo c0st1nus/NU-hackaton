@@ -24,7 +24,6 @@ export const users = pgTable("users", {
   name: text("name"),
   picture: text("picture"),
   role: varchar("role", { length: 32 }).default("USER"), // ADMIN, MANAGER, USER
-  googleId: text("google_id").unique(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

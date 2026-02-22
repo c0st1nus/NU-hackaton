@@ -112,7 +112,6 @@ export const kz = {
     companyName: "Компания атауы",
     signIn: "Кіру",
     register: "Тіркелу",
-    orWithGoogle: "Немесе Google арқылы жалғастыру",
     noAccount: "Аккаунт жоқ па?",
     hasAccount: "Аккаунт бар ма?",
     acceptInvite: "Шақыруды қабылдау",
