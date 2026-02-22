@@ -8,6 +8,9 @@ import {
   enqueueTickets,
   getQueueLength,
 } from "../services/queue";
+import { db } from "../db";
+import { companies } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * Universal ingest endpoint — accepts tickets from ANY channel.
@@ -26,10 +29,34 @@ export const ingestRoutes = new Elysia()
   .use(cookie())
   .group("/api/ingest", (app) =>
     app
-      .derive(async ({ jwt, cookie: { auth_token } }) => {
-        if (!auth_token || !auth_token.value) return { user: null };
-        const payload = await jwt.verify(auth_token.value as string);
-        return { user: payload };
+      .derive(async ({ jwt, cookie: { auth_token }, headers }) => {
+        // 1. Try JWT from cookie
+        if (auth_token?.value) {
+          const payload = await jwt.verify(auth_token.value as string);
+          if (payload) return { user: payload };
+        }
+
+        // 2. Try API Token from header
+        const apiKey = headers["x-api-key"];
+        if (apiKey) {
+          const [company] = await db
+            .select()
+            .from(companies)
+            .where(eq(companies.apiToken, apiKey))
+            .limit(1);
+
+          if (company) {
+            return {
+              user: {
+                id: 0, // System user ID
+                companyId: company.id,
+                role: "SYSTEM",
+              },
+            };
+          }
+        }
+
+        return { user: null };
       })
 
       // ── Single ticket ─────────────────────────────────────────────────

@@ -153,8 +153,11 @@ export const authRoutes = new Elysia()
             name: users.name,
             role: users.role,
             companyId: users.companyId,
+            companyName: companies.name,
+            apiToken: companies.apiToken,
           })
           .from(users)
+          .leftJoin(companies, eq(users.companyId, companies.id))
           .where(eq(users.id, payload.id as number))
           .limit(1);
 

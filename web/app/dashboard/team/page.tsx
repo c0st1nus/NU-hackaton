@@ -1,13 +1,13 @@
 "use client";
 
-import { Link2, Pencil, Trash2, UserPlus, Users } from "lucide-react";
+import { Key, Link2, Pencil, Trash2, UserPlus, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { BusinessUnit, Manager } from "@/types";
 import { ProtectedGuard } from "../../../components/protected-guard";
 import { api } from "../../../lib/api";
 import { useAuth } from "../../../lib/auth-context";
 
-type Tab = "list" | "create" | "invite";
+type Tab = "list" | "create" | "invite" | "api";
 
 export default function TeamDashboard() {
   const { user } = useAuth();
@@ -193,6 +193,7 @@ export default function TeamDashboard() {
             { key: "list" as Tab, label: "Список команды", icon: Users },
             { key: "create" as Tab, label: "Создать аккаунт", icon: UserPlus },
             { key: "invite" as Tab, label: "Пригласить", icon: Link2 },
+            { key: "api" as Tab, label: "API Настройки", icon: Key },
           ].map(({ key, label, icon: Icon }) => (
             <button
               type="button"
@@ -482,6 +483,74 @@ export default function TeamDashboard() {
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ═══════ TAB: API ═══════ */}
+        {activeTab === "api" && (
+          <div className="bg-card border border-border rounded-xl p-6 shadow-md">
+            <h2 className="text-xl font-semibold mb-4 text-blue-400 flex items-center gap-2">
+              <Key size={20} />
+              API Доступ для внешних систем
+            </h2>
+            <div className="space-y-4 max-w-2xl">
+              <p className="text-sm text-gray-400">
+                Используйте этот токен для автоматической отправки тикетов из внешних систем (например, голосовых роботов или чат-виджетов) без авторизации.
+              </p>
+              
+              <div className="p-4 bg-muted/30 border border-border rounded-lg space-y-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold uppercase text-gray-500 tracking-wider">
+                    API Токен Компании
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={user.apiToken || "Загрузка..."}
+                      className="flex-1 px-3 py-2 bg-background border border-border rounded-md text-foreground text-sm font-mono focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => user.apiToken && navigator.clipboard.writeText(user.apiToken)}
+                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-sm font-medium text-white transition flex items-center gap-1.5"
+                    >
+                      Копировать
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 mt-6">
+                <h3 className="text-sm font-semibold uppercase text-gray-500 tracking-wider">
+                  Пример запроса (cURL)
+                </h3>
+                <div className="p-3 bg-black/50 rounded-lg overflow-x-auto">
+                  <pre className="text-xs text-blue-300 font-mono">
+{`curl -X POST http://localhost:8000/api/ingest \\
+  -H "Content-Type: application/json" \\
+  -H "x-api-key: ${user.apiToken || 'YOUR_TOKEN'}" \\
+  -d '{
+    "source": "voice",
+    "payload": {
+      "phone": "+7 777 000 1122",
+      "status": "Завершен",
+      "transcript": [{ "role": "user", "text": "Клиент доволен" }]
+    }
+  }'`}
+                  </pre>
+                </div>
+              </div>
+
+              <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <p className="text-xs text-yellow-500 flex items-start gap-2">
+                  <span>⚠️</span>
+                  <span>
+                    Храните этот токен в секрете. Любой, у кого есть этот ключ, может создавать тикеты в вашей системе.
+                  </span>
+                </p>
+              </div>
+            </div>
           </div>
         )}
 

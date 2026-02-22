@@ -164,4 +164,5 @@ export interface User {
   name: string | null;
   role: string | null;
   companyId: number | null;
+  apiToken?: string | null;
 }

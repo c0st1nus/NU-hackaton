@@ -12,6 +12,9 @@ import {
 export const companies = pgTable("companies", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  apiToken: text("api_token")
+    .unique()
+    .$defaultFn(() => crypto.randomUUID()),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -24,6 +27,7 @@ export const users = pgTable("users", {
   name: text("name"),
   picture: text("picture"),
   role: varchar("role", { length: 32 }).default("USER"), // ADMIN, MANAGER, USER
+  googleId: text("google_id").unique(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
