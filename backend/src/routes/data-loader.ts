@@ -123,6 +123,7 @@ export const dataLoaderRoutes = new Elysia()
               null,
             street: row.street || row.Street || row.Улица || null,
             house: row.house || row.House || row.Дом || null,
+            status: row.status || row.Status || row.Статус || null,
           };
         });
 
@@ -160,6 +161,7 @@ export const dataLoaderRoutes = new Elysia()
               city: row.city,
               street: row.street,
               house: row.house,
+              status: row.status || "Новый",
             }));
 
             // For simplicity, handle chunking if there are many records

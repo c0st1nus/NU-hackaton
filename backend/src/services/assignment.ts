@@ -264,3 +264,37 @@ async function resolveBusinessUnitId(office: string): Promise<number | null> {
     .limit(1);
   return row?.id ?? null;
 }
+
+/**
+ * Assign a ticket directly to the AI bot entirely, bypassing routing.
+ */
+export async function assignToAIBot(
+  ticketId: number,
+  analysisId: number | null,
+  companyId: number,
+): Promise<{ managerName: string }> {
+  // Find the AI bot manager
+  const [botManager] = await db
+    .select({ id: managers.id, name: managers.name })
+    .from(managers)
+    .where(
+      sql`${managers.companyId} = ${companyId} AND ${managers.name} = 'Voice Agent Robot'`
+    )
+    .limit(1);
+
+  if (!botManager) {
+    throw new Error("Voice Agent Robot not found in the database");
+  }
+
+  // Insert assignment
+  await db.insert(assignments).values({
+    ticketId,
+    analysisId,
+    managerId: botManager.id,
+    assignmentReason: JSON.stringify({
+      steps: ["Тикет автоматически решён AI ассистентом", "Назначено на бота."],
+    }),
+  });
+
+  return { managerName: botManager.name };
+}

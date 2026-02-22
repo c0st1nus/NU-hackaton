@@ -155,6 +155,7 @@ export async function handleTicketAnalysis(
           contact: unified.contact || null,
           description: unified.text,
           source: unified.source,
+          status: unified.status || "Новый",
         })
         .returning({ id: tickets.id });
       ticketId = inserted.id;
@@ -173,6 +174,7 @@ export async function handleTicketAnalysis(
         contact: unified.contact || null,
         description: unified.text,
         source: unified.source,
+        status: unified.status || "Новый",
       })
       .returning({ id: tickets.id });
     ticketId = inserted.id;
@@ -233,13 +235,28 @@ export async function handleTicketAnalysis(
   }
 
   // 5. Assignment
-  try {
-    const assignment = await assignTicket(ticketId, analysisRow.id, lat, lon);
-    console.log(
-      `[Analysis] Ticket "${ticketGuid}" → ${assignment.managerName} (${assignment.office})`,
-    );
-  } catch (err) {
-    console.error(`[Analysis] Assignment failed for "${ticketGuid}":`, err);
+  const currentStatus = unified.status || "Новый";
+  if (currentStatus !== "Завершен") {
+    // Normal routing
+    try {
+      const assignment = await assignTicket(ticketId, analysisRow.id, lat, lon);
+      console.log(
+        `[Analysis] Ticket "${ticketGuid}" → ${assignment.managerName} (${assignment.office})`,
+      );
+    } catch (err) {
+      console.error(`[Analysis] Assignment failed for "${ticketGuid}":`, err);
+    }
+  } else {
+    // Already resolved by AI - assign directly to AI bot
+    try {
+      const { assignToAIBot } = await import("../services/assignment");
+      const assignment = await assignToAIBot(ticketId, analysisRow.id, unified.companyId);
+      console.log(
+        `[Analysis] Ticket "${ticketGuid}" already resolved by AI, assigned to: ${assignment.managerName}`,
+      );
+    } catch (err) {
+      console.error(`[Analysis] AI Agent Assignment failed for "${ticketGuid}":`, err);
+    }
   }
 
   // 6. Invalidate stats cache

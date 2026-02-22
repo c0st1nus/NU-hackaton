@@ -40,6 +40,7 @@ export interface UnifiedTicket {
   street?: string;
   house?: string;
   contact?: string;
+  status?: string;
 
   /** Image attachments (screenshots, photos from chat, etc.) */
   images?: ImageAttachment[];
@@ -68,6 +69,7 @@ export interface VoicePayload {
   callId: string;
   duration: number;
   city?: string;
+  status?: string;
   transcript: Array<{ role: string; text: string }>;
 }
 
@@ -76,6 +78,7 @@ export interface ChatPayload {
   userId?: number;
   messages: Array<{ role: string; text: string }>;
   city?: string;
+  status?: string;
   /** Attached images — URL links or base64 data */
   images?: ImageAttachment[];
 }
@@ -113,6 +116,7 @@ export function normalizeTicket(
       source: "voice",
       companyId,
       city: r.city,
+      status: r.status,
       country: "Казахстан",
       meta: { phone: r.phone, duration: r.duration, callId: r.callId },
     };
@@ -125,6 +129,7 @@ export function normalizeTicket(
       source: "chat",
       companyId,
       city: r.city,
+      status: r.status,
       images: r.images,
       meta: { sessionId: r.sessionId, userId: r.userId },
     };
