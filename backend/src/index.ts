@@ -23,7 +23,7 @@ await initDb();
 await ensureBucket();
 
 const app = new Elysia()
-  .use(cors({ origin: ["http://localhost:3000", "http://localhost:1285", "http://192.168.0.112:1285", "https://fire.api.depa-team.com"] }))
+  .use(cors({ origin: true, credentials: true }))
   .use(swagger({ path: "/docs" }))
   .use(
     jwt({
